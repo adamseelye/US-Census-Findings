@@ -1,7 +1,7 @@
 # US Census Findings:
-- This repository contains all the code used in Project 3 of Revatures 2022 big data cohort. 
-This project scrapes census data and uses spark to answer some analytical questions based 
-on the data. Some of the questions we asked include:
+- This repository contains all the code used in Project 3 of Revature's 2022 Big Data cohort. 
+This project scrapes US Census data and uses Apache Spark to answer questions based 
+on the data. Questions we ask include:
   - What was the total population of each state in 2000, 2010, and 2020?
   - Which region has the highest population?
   - Which region is growing the fastest?
@@ -12,18 +12,18 @@ on the data. Some of the questions we asked include:
   - Which states are growing the fastest?
   - What predictions about the future population can we make based on this data?
 
-## What's in this Repository:
+## What's in this Repository?
 - [OutputCSV2](https://github.com/Revature-William-T-1377/US-Census-Findings/tree/staging/OutputCSV2)
-is the folder where our data after ETL operations is stored.
+Data storage for ETL operations.
 - [resultCsv](https://github.com/Revature-William-T-1377/US-Census-Findings/tree/staging/resultCsv)
-is where the results of our queries are stored as csv files.
+Query results stored as CSV files.
 - [src/main/scala/etl](https://github.com/Revature-William-T-1377/US-Census-Findings/tree/testing/src/main/scala/etl)
-contains all the code used for data scraping and ETL operations.
+Contains the code for data scraping and ETL operations.
 - [src/main/scala/queries](https://github.com/Revature-William-T-1377/US-Census-Findings/tree/testing/src/main/scala/queries)
-contains all the queries we ran to answer analytical questions.
+Contains the queries.
 - [src/main/scala/sparkConnector](https://github.com/Revature-William-T-1377/US-Census-Findings/tree/testing/src/main/scala/sparkConnector)
-contains code used to create a spark connection as well as code for starting all scraping and etl operations.
+Contains code used to create a spark connection as well as scraping and ETL operations.
 - [src/main/scala/Main.scala](https://github.com/Revature-William-T-1377/US-Census-Findings/blob/testing/src/main/scala/Main.scala)
-is the main scala program that runs queries and outputs the results.
+Scala program to run queries and output the results.
 - [tableFiles](https://github.com/Revature-William-T-1377/US-Census-Findings/tree/staging/tableFiles)
-contains extra files from the US census that were used in ETL operations.
+Contains extra files from the US Census that were used in ETL operations.

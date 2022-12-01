@@ -80,7 +80,7 @@ object optimizedScraper {
       }
       writer1.close()
     }
-  } // finished
+  }
 
   def extract2010(locations: Array[Array[String]]): Unit = {
     var counter = 1
@@ -102,7 +102,7 @@ object optimizedScraper {
       counter = counter + 1
     }
 
-    //sets up field names for 00001.csv and 00002.csv
+    // Set up field names for 00001.csv and 00002.csv
     val file1Name = "tableFiles/PL_PART1.csv"
     var fields1 = ""
     for (line <- Source.fromFile(file1Name).getLines()) {
@@ -157,7 +157,7 @@ object optimizedScraper {
       counter = counter + 1
     }
 
-    //sets up field names for 00001.csv and 00002.csv
+    // Set up field names for 00001.csv and 00002.csv
     val file1Name = "tableFiles/PL_PART1.csv"
     var fields1 = ""
     for (line <- Source.fromFile(file1Name).getLines()) {
@@ -181,7 +181,7 @@ object optimizedScraper {
       writer1.close()
     }
 
-  } // finished
+  }
 
   def run(): Unit = {
     val t1 = System.nanoTime()

@@ -8,14 +8,14 @@ import scala.io.Source
 import scala.language.postfixOps
 import scala.sys.process._
 
-object combinedScrapper {
+object combinedScraper {
 
-  //Downloads a file given some url and file name
+  // Downloads a file given some url and file name
   def fileDownload(url: String, fileName: String) = {
     new URL(url) #> new File(fileName) !!
   }
 
-  //Unzips zip files
+  // Unzips zip files
   def unzip(fileName: String) = {
     val fInStream = new FileInputStream(fileName)
     val zInString = new ZipInputStream(fInStream)
@@ -141,7 +141,7 @@ object combinedScrapper {
       }
       writer4.close()
     }
-  } // finished
+  }
 
   def extract2010(locations: Array[Array[String]]): Unit = {
 
@@ -164,7 +164,7 @@ object combinedScrapper {
       counter = counter + 1
     }
 
-    //sets up field names for 00001.csv and 00002.csv
+    // Set up field names for 00001.csv and 00002.csv
     val file1Name = "tableFiles/PL_PART1.csv"
     var fields1 = ""
     for (line <- Source.fromFile(file1Name).getLines()) {
@@ -203,7 +203,7 @@ object combinedScrapper {
     }
     geoHeaders = geoHeaders.substring(0, geoHeaders.length()-1) + "\n"
 
-    //fills in 00001.csv and 00002.csv with field names and data from upl files
+    // Fill in 00001.csv and 00002.csv with field names and data from UPL files
     for (states <- locations) {
       val file1Name = s"${states(1)}00001.csv"
       var upl1Name = ""
@@ -257,7 +257,7 @@ object combinedScrapper {
       }
       geoWriter.close()
     }
-  } // finished
+  }
 
   def extract2000(locations: Array[Array[String]]): Unit = {
     var counter = 1
@@ -289,7 +289,7 @@ object combinedScrapper {
       counter = counter + 1
     }
 
-    //sets up field names for 00001.csv and 00002.csv
+    // Set up field names for 00001.csv and 00002.csv
     val file1Name = "tableFiles/PL_PART1.csv"
     var fields1 = ""
     for (line <- Source.fromFile(file1Name).getLines()) {
@@ -312,7 +312,7 @@ object combinedScrapper {
     }
     fields2 = fields2.substring(1, fields2.length()-1) + "\n"
 
-    //fills in 00001.csv and 00002.csv with field names and data from upl files
+    // Fill in 00001.csv and 00002.csv with field names and data from UPL files
     for (states <- locations) {
       val file1Name = s"${states(1)}00001.csv"
       val upl1Name = s"${states(1)}00001.upl"
@@ -335,7 +335,7 @@ object combinedScrapper {
       writer2.close()
     }
 
-    //sets up the headers for geo files
+    // Set up the headers for geo files
     val fileName = "tableFiles/0HEADER.csv"
     var geoHeaders = ""
     var lengths = Array[Int]()
@@ -351,7 +351,7 @@ object combinedScrapper {
     }
     geoHeaders = geoHeaders.substring(0, geoHeaders.length()-1) + "\n"
 
-    //iterates through
+    // Iterate through files
     for (states <- locations) {
       val csvName = s"${states(1)}geo.csv"
       val uplName = s"${states(1)}geo.upl"
@@ -376,7 +376,7 @@ object combinedScrapper {
     Files.createDirectories(Paths.get("./datasets/2000/"))
     Files.createDirectories(Paths.get("./datasets/2020/"))
     val t1 = System.nanoTime()
-    //2D array with all folders and abbreviations for 2000 census data
+    // 2D array with all folders and abbreviations for 2000 census data
     val locations = Array(
       Array("Alabama", "al"),
       Array("Alaska", "ak"),

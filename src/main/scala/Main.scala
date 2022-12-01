@@ -6,106 +6,102 @@ import org.apache.spark.sql.{Row, SaveMode}
 import sparkConnector.spark
 
 import java.io.{File, FileWriter}
-import org.apache.log4j.{Level, Logger}
-import org.apache.spark.sql.{DataFrame, SparkSession}
-
-import java.io.{File, FileReader, FileWriter}
-import scala.collection.convert.ImplicitConversions.{`list asScalaBuffer`, `map AsJavaMap`}
+import scala.collection.convert.ImplicitConversions.`list asScalaBuffer`
 
 object Main {
 
   val spark = new spark
 
-  val mymultiarr= Array.ofDim[String](1, 7) //Create Array with State code name
+  val mult_dim_arr: Array[Array[String]] = Array.ofDim[String](1, 7) // Create Array with State code name
 
   def AddHeader(fileName: String): Unit ={
     val writer = new FileWriter(fileName, false)
     try {
       writer.append("StateID,2000 Decade,2010 Decade,2020 Decade,2030 Decade,2040 Decade,2050 Decade\n") // Appending each array until loop end
     } finally {
-      writer.flush()
-      writer.close() //Close CSV Writer
+      writer.flush() // Flush writer memory
+      writer.close() // Close CSV Writer
     }
   }
 
-  def ExportCSV(file: String) : Unit ={  //Function for export CSv
-    val ColumnSeparator = ","  //separate by comma for export csv
+  def ExportCSV(file: String) : Unit ={  // Function for export CSV
+    val ColumnSeparator = ","  // Separate by comma for export CSV
     val writer = new FileWriter(file, true)
 
     try {
-      mymultiarr.foreach{
+      mult_dim_arr.foreach{
         line =>
-          writer.append(s"${line.map(_.toString).mkString(ColumnSeparator)}\n") // Appending each array until loop end
+          writer.append(s"${line.map(_).mkString(ColumnSeparator)}\n") // Appending each array until loop end
       }
     } finally {
-      writer.flush()
-      writer.close() //Close CSV Writer
+      writer.flush() // Flush Writer memory
+      writer.close() // Close CSV Writer
     }
   }
-  def deleteFile(path: String) = {  //Check if file existing
+  def deleteFile(path: String) = {  // Delete file if it exists
     val fileTemp = new File(path)
     if (fileTemp.exists) {
       fileTemp.delete()
     }
   }
 
-  def decayProjection(stateCode: String, year1: Long, year2: Long, year3: Long, fileName: String) {
+  def decayProjection(stateCode: String, year1: Long, year2: Long, year3: Long, fileName: String): Unit = {
     var years = Array(
       Array(2000, year1),
       Array(2010, year2),
       Array(2020, year3)
     )
     for(i <- 1 to 3) {
-      var year1 :Double  = years(years.size - 3)(1)
-      var year2 :Double = years(years.size - 2)(1)
-      var year3 :Double = years(years.size - 1)(1)
+      var year1 :Double  = years(years.length - 3)(1)
+      var year2 :Double = years(years.length - 2)(1)
+      var year3 :Double = years(years.length - 1)(1)
       var growth1 = ((year2 - year1 )/ year1)
 
       var growth2 = ((year3 - year2) / year2)
-      var derivative = (growth1 - growth2)  // negative downtrends :3c
+      var derivative = (growth1 - growth2)  // Negative downtrends
       var growthDecay = 1- (derivative / growth1)
       var year = 2020 + (i * 10)
       var population =(years.last(1) * (1 + (growth2 * growthDecay))).toLong
       years = years :+ Array(year, population)
-      mymultiarr(0)(i+3) = population.toString  //Adding Predicted population in FOR loop for 2030,2040,2050
+      mult_dim_arr(0)(i+3) = population.toString  //Adding Predicted population in FOR loop for 2030, 2040, 2050
 
     }
-    mymultiarr(0)(0) = stateCode //First index is States Code
-    mymultiarr(0)(1) = year1.toString //2nd index default 2000 population
-    mymultiarr(0)(2) = year2.toString //3rd index default 2010 population
-    mymultiarr(0)(3) = year3.toString //4th index default 2020 population
-    ExportCSV(fileName)  //Function Called to export these outputs as CSV files
+    mult_dim_arr(0)(0) = stateCode // First index is States Code
+    mult_dim_arr(0)(1) = year1.toString // 2nd index default 2000 population
+    mult_dim_arr(0)(2) = year2.toString // 3rd index default 2010 population
+    mult_dim_arr(0)(3) = year3.toString // 4th index default 2020 population
+    ExportCSV(fileName)  // Function Called to export these outputs as CSV files
 
 
   }
-  def slopeProjection(stateCode: String, year1: Long, year2: Long, year3: Long, fileNameSlope: String) {
+  def slopeProjection(stateCode: String, year1: Long, year2: Long, year3: Long, fileNameSlope: String): Unit = {
     var years = Array(
       Array(2000, year1),
       Array(2010, year2),
       Array(2020, year3)
     )
     for(i <- 1 to 3) {
-      var year1 :Double  = years(years.size - 3)(1)
-      var year2 :Double = years(years.size - 2)(1)
-      var year3 :Double = years(years.size - 1)(1)
+      var year1 :Double  = years(years.length - 3)(1)
+      var year2 :Double = years(years.length - 2)(1)
+      var year3 :Double = years(years.length - 1)(1)
       var growth1 = (year2 - year1)
       var growth2 = (year3 - year2)
       var growth3 = ((growth1 + growth2)/2)
       var year = 2020 + (i * 10)
       var population =(years.last(1) +growth3).toLong
       years = years :+ Array(year, population)
-      mymultiarr(0)(i+3) = population.toString  //Adding Predicted population in FOR loop for 2030,2040,2050
+      mult_dim_arr(0)(i+3) = population.toString  // Adding Predicted population in FOR loop for 2030,2040,2050
 
     }
-    mymultiarr(0)(0) = stateCode //First index is States Code
-    mymultiarr(0)(1) = year1.toString //2nd index default 2000 population
-    mymultiarr(0)(2) = year2.toString //3rd index default 2010 population
-    mymultiarr(0)(3) = year3.toString //4th index default 2020 population
-    ExportCSV(fileNameSlope)  //Function Called to export these outputs as CSV files
+    mult_dim_arr(0)(0) = stateCode // First index is States Code
+    mult_dim_arr(0)(1) = year1.toString // 2nd index default 2000 population
+    mult_dim_arr(0)(2) = year2.toString // 3rd index default 2010 population
+    mult_dim_arr(0)(3) = year3.toString // 4th index default 2020 population
+    ExportCSV(fileNameSlope)  // Function Called to export these outputs as CSV files
 
 
   }
-  def decayHybridProjection(stateCode: String, year1: Long, year2: Long, year3: Long, fileNameHybrid: String) {
+  def decayHybridProjection(stateCode: String, year1: Long, year2: Long, year3: Long, fileNameHybrid: String): Unit = {
     var years = Array(
       Array(2000, year1),
       Array(2010, year2),
@@ -113,47 +109,44 @@ object Main {
     )
     var population = (years.last(1))
     for(i <- 1 to 3) {
-      var year1 :Double  = years(years.size - 3)(1)
-      var year2 :Double = years(years.size - 2)(1)
-      var year3 :Double = years(years.size - 1)(1)
+      var year1 :Double  = years(years.length - 3)(1)
+      var year2 :Double = years(years.length - 2)(1)
+      var year3 :Double = years(years.length - 1)(1)
       var growth1 = ((year2 - year1 )/ year1)
       var growth2 = ((year3 - year2) / year2)
       var derivative = (growth1 - growth2)  // negative downtrends :3c
-      // println(derivative)
       var growthDecay = 1- (derivative / growth1)
       if(derivative < 0) {
-        // println("inside the if")
         growth1 = (year2 - year1)
         growth2 = (year3 - year2)
         var growth3 = ((growth1 + growth2)/2)
         var population =(years.last(1) + growth3).toLong
         var year = 2020 + (i * 10)
         years = years :+ Array(year, population)
-        mymultiarr(0)(i+3) = population.toString  //Adding Predicted population in FOR loop for 2030,2040,2050
+        mult_dim_arr(0)(i+3) = population.toString  // Adding Predicted population in FOR loop for 2030,2040,2050
       }
       else
       {
-        // println("inside the else")
         var population =(years.last(1) * (1 + (growth2 * growthDecay))).toLong
         var year = 2020 + (i * 10)
         years = years :+ Array(year, population)
-        mymultiarr(0)(i+3) = population.toString  //Adding Predicted population in FOR loop for 2030,2040,2050
+        mult_dim_arr(0)(i+3) = population.toString  // Adding Predicted population in FOR loop for 2030,2040,2050
       }
     }
-    mymultiarr(0)(0) = stateCode //First index is States Code
-    mymultiarr(0)(1) = year1.toString //2nd index default 2000 population
-    mymultiarr(0)(2) = year2.toString //3rd index default 2010 population
-    mymultiarr(0)(3) = year3.toString //4th index default 2020 population
-    ExportCSV(fileNameHybrid)  //Function Called to export these outputs as CSV files
+    mult_dim_arr(0)(0) = stateCode // First index is States Code
+    mult_dim_arr(0)(1) = year1.toString // 2nd index default 2000 population
+    mult_dim_arr(0)(2) = year2.toString // 3rd index default 2010 population
+    mult_dim_arr(0)(3) = year3.toString // 4th index default 2020 population
+    ExportCSV(fileNameHybrid)  // Function Called to export these outputs as CSV files
 
 
   }
 
   def main(args: Array[String]): Unit = {
-    //initializing spark session
+    // Initialize spark session
     val session = spark
 
-    //creating initial empty dataframes
+    // Create empty dataframes
     var df = session.spark.emptyDataFrame
     var df2 = session.spark.emptyDataFrame
     var df3 = session.spark.emptyDataFrame
@@ -163,17 +156,17 @@ object Main {
     df2 = session.spark.read.option("header", "true").csv(s"./Combine2010RG.csv") //2010
     df3 = session.spark.read.option("header", "true").csv(s"./Combine2000RG.csv") //2000
 
-    //basic casting for dataframes
+    // Cast dataframe column types
     df = df.withColumn("p0010001", col("p0010001").cast(DecimalType(18, 1)))
     df2 = df2.withColumn("p0010001", col("p0010001").cast(DecimalType(18, 1)))
     df3 = df3.withColumn("p0010001", col("p0010001").cast(DecimalType(18, 1)))
 
-    //turns dataframes into tempviews for querying
+    // Create Temp Views
     df.createOrReplaceTempView("c2020")
     df2.createOrReplaceTempView("c2010")
     df3.createOrReplaceTempView("c2000")
 
-    //running queries 1-6
+    // Queries 1 - 6
     val query = queries.Queries
     session.spark.sql(query.query1()).show()
     session.spark.sql(query.query2()).show()
@@ -186,7 +179,7 @@ object Main {
     session.spark.sql(query.query5()).show()
     session.spark.sql(query.query6()).show()
 
-    //setting up and running query 7
+    // Query 7
     var dfne  = session.spark.sql(query.queryNE())
     var dfne2 = dfne.withColumn("Region", lit("Northeast"))
 
@@ -207,11 +200,11 @@ object Main {
 
     session.spark.sql(query.query7()).show()
 
-    //running query 8
+    // Query 8
     session.spark.sql(query.query8()).show()
 
     /*************************QUERY FOR POPULATION OF DIFFERENT CATEGORIES**************************************/
-    //sets up columns for query 9
+
     var dse1 = session.spark.emptyDataFrame
     var dse2 = session.spark.emptyDataFrame
     var dse3 = session.spark.emptyDataFrame
@@ -278,7 +271,6 @@ object Main {
     val df123 = Joining2
 
     /**********************************************************************************************************/
-    //creating the empty dataframes for future use
 
     var dfe1 = session.spark.emptyDataFrame
     var dfe2 = session.spark.emptyDataFrame
@@ -290,42 +282,42 @@ object Main {
     val half2 = df123.select(df123.columns.slice(73,151).map(m=>col(m)):_*)
     half2.repartition(1).write.mode(SaveMode.Overwrite).option("header", "true").csv(s"./queries/half2/")
 
-    //white
+    // White
     val data = Seq(Row("White"))
     val schema = new StructType()
       .add("Years",StringType)
     val dfwhite = session.spark.createDataFrame(session.spark.sparkContext.parallelize(data),schema)
     dfe1 = dfwhite
 
-    //black
+    // Black
     val data2 = Seq(Row("Black"))
     val schema2 = new StructType()
       .add("Years",StringType)
     val dfblack = session.spark.createDataFrame(session.spark.sparkContext.parallelize(data2),schema2)
     dfe2 = dfblack
 
-    //Asian
+    // Asian
     val data3 = Seq(Row("Asian"))
     val schema3 = new StructType()
       .add("Years",StringType)
     val dfasian = session.spark.createDataFrame(session.spark.sparkContext.parallelize(data3),schema3)
     dfe3 = dfasian
 
-    //Native
+    // Native
     val data4 = Seq(Row("Native"))
     val schema4 = new StructType()
       .add("Years",StringType)
     val dfnative = session.spark.createDataFrame(session.spark.sparkContext.parallelize(data4),schema4)
     dfe4 = dfnative
 
-    //hispanic
+    // Hispanic
     val data5 = Seq(Row("Hispanic"))
     val schema5 = new StructType()
       .add("Year",StringType)
     val dfhispanic = session.spark.createDataFrame(session.spark.sparkContext.parallelize(data5),schema5)
     dfe5 = dfhispanic
 
-    //for making csv
+    // Prepare for CSV
     val data6 = Seq(Row("2000"), Row("2010"), Row("2020"))
     val schemap = new StructType()
       .add("years",StringType)
@@ -333,7 +325,7 @@ object Main {
     val windowSpec2 = Window.orderBy(asc("years"))
     dfe6 = dfe6.withColumn("id", row_number.over(windowSpec2))
 
-    //creation of dataframe to pivot/transpose on while adding an id column
+    // Create dataframe to pivot/transpose on while adding an id column
     var half2ori = session.spark.read.option("header", "true").csv(s"./queries/half2/")
     val windowSpec = Window.orderBy(asc("HispanicorLatin"))
     half2ori = half2ori.withColumn("id", row_number.over(windowSpec))
@@ -341,7 +333,7 @@ object Main {
 
     var half2ori2 = dfe6.join(half2ori, dfe6("id") === half2ori("id"), "left").drop("id")
 
-    //creation of pivoted dataframe without race column
+    // Creation of pivoted dataframe without race column
     val schemapivot = new StructType()
       .add("y2000",StringType)
       .add("y2010",StringType)
@@ -361,7 +353,7 @@ object Main {
 
     import session.spark.implicits._
 
-    //creation of race column with id column
+    // Creation of race column with id column
     val columns = Seq("HispanicorLatin",	"NotHispanicorLatin",	"Populationofonerace7",	"Whitealone7",	"BlackorAfricanAmericanalone7",	"AmericanIndianandAlaskaNativealone7",	"Asianalone7",	"NativeHawaiianandOtherPacificIslanderalone7",	"SomeOtherRacealone8",	"Populationoftwoormoreraces8",	"Populationoftworaces8",	"WhiteBlackorAfricanAmerican8",	"WhiteAmericanIndianandAlaskaNative8",	"WhiteAsian8",	"WhiteNativeHawaiianandOtherPacificIslander8",	"WhiteSomeOtherRace8",	"BlackorAfricanAmericanAmericanIndianandAlaskaNative8",	"BlackorAfricanAmericanAsian8",	"BlackorAfricanAmericanNativeHawaiianandOtherPacificIslander9",	"BlackorAfricanAmericanSomeOtherRace9",	"AmericanIndianandAlaskaNativeAsian9",	"AmericanIndianandAlaskaNativeNativeHawaiianandOtherPacificIslander9",	"AmericanIndianandAlaskaNativeSomeOtherRace9",	"AsianNativeHawaiianandOtherPacificIslander9",	"AsianSomeOtherRace9",	"NativeHawaiianandOtherPacificIslanderSomeOtherRace9",	"Populationofthreeraces9",	"WhiteBlackorAfricanAmericanAmericanIndianandAlaskaNative9",	"WhiteBlackorAfricanAmericanAsian10",	"WhiteBlackorAfricanAmericanNativeHawaiianandOtherPacificIslander10",	"WhiteBlackorAfricanAmericanSomeOtherRace10",	"WhiteAmericanIndianandAlaskaNativeAsian10",	"WhiteAmericanIndianandAlaskaNativeNativeHawaiianandOtherPacificIslander10",	"WhiteAmericanIndianandAlaskaNativeSomeOtherRace10"	,"WhiteAsianNativeHawaiianandOtherPacificIslander10",	"WhiteAsianSomeOtherRace10",	"WhiteNativeHawaiianandOtherPacificIslanderSomeOtherRac",	"BlackorAfricanAmericanAmericanIndianandAlaskaNativeAsian10",	"BlackorAfricanAmericanAmericanIndianandAlaskaNativeNativeHawaiianandOtherPacificIslander11",	"BlackorAfricanAmericanAmericanIndianandAlaskaNativeSomeOtherRace11",	"BlackorAfricanAmericanAsianNativeHawaiianandOtherPacificIslander11",	"BlackorAfricanAmericanAsianSomeOtherRace11",	"BlackorAfricanAmericanNativeHawaiianandOtherPacificIslanderSomeOtherRace11",	"AmericanIndianandAlaskaNativeAsianNativeHawaiianandOtherPacificIslander11"	,"AmericanIndianandAlaskaNativeAsianSomeOtherRace11",	"AmericanIndianandAlaskaNativeNativeHawaiianandOtherPacificIslanderSomeOtherRace11",	"AsianNativeHawaiianandOtherPacificIslanderSomeOtherRace11",	"Populationoffourraces11",	"WhiteBlackorAfricanAmericanAmericanIndianandAlaskaNativeAsian12",	"WhiteBlackorAfricanAmericanAmericanIndianandAlaskaNativeNativeHawaiianandOtherPacificIslander12",	"WhiteBlackorAfricanAmericanAmericanIndianandAlaskaNativeSomeOtherRace12",	"WhiteBlackorAfricanAmericanAsianNativeHawaiianandOtherPacificIslander12",	"WhiteBlackorAfricanAmericanAsianSomeOtherRace12"	,"WhiteBlackorAfricanAmericanNativeHawaiianandOtherPacificIslanderSomeOtherRace12",	"WhiteAmericanIndianandAlaskaNativeAsianNativeHawaiianandOtherPacificIslander12",	"WhiteAmericanIndianandAlaskaNativeAsianSomeOtherRace12",	"WhiteAmericanIndianandAlaskaNativeNativeHawaiianandOtherPacificIslanderSomeOtherRace12",	"WhiteAsianNativeHawaiianandOtherPacificIslanderSomeOtherRace12",	"BlackorAfricanAmericanAmericanIndianandAlaskaNativeAsianNativeHawaiianandOtherPacificIslander13",	"BlackorAfricanAmericanAmericanIndianandAlaskaNativeAsianSomeOtherRace13",	"BlackorAfricanAmericanAmericanIndianandAlaskaNativeNativeHawaiianandOtherPacificIslanderSomeOtherRace13",	"BlackorAfricanAmericanAsianNativeHawaiianandOtherPacificIslanderSomeOtherRace13",	"AmericanIndianandAlaskaNativeAsianNativeHawaiianandOtherPacificIslanderSomeOtherRace13",	"Populationoffiveraces13",	"WhiteBlackorAfricanAmericanAmericanIndianandAlaskaNativeAsianNativeHawaiianandOtherPacificIslander13"	,"WhiteBlackorAfricanAmericanAmericanIndianandAlaskaNativeAsianSomeOtherRace13",	"WhiteBlackorAfricanAmericanAmericanIndianandAlaskaNativeNativeHawaiianandOtherPacificIslanderSomeOtherRace13"	,"WhiteBlackorAfricanAmericanAsianNativeHawaiianandOtherPacificIslanderSomeOtherRace13"	,"WhiteAmericanIndianandAlaskaNativeAsianNativeHawaiianandOtherPacificIslanderSomeOtherRace14"	,"BlackorAfricanAmericanAmericanIndianandAlaskaNativeAsianNativeHawaiianandOtherPacificIslanderSomeOtherRace14",	"Populationofsixraces14"	,"WhiteBlackorAfricanAmericanAmericanIndianandAlaskaNativeAsianNativeHawaiianandOtherPacificIslanderSomeOtherRace14")
     val dataset = columns.toDS()
 
@@ -401,11 +393,11 @@ object Main {
     session.spark.sql(query.query8()).coalesce(1).write.mode(SaveMode.Overwrite).option("header", "true").csv(s"./resultCsv/query8/")
     Join2.coalesce(1).write.mode(SaveMode.Overwrite).option("header", "true").csv(s"./resultCsv/query9/")
 
-    //Code for future analysis
+    // Code for future analysis
     val fullDf =session.spark.sql(" SELECT DISTINCT(f.STUSAB) , f.P0010001  , s.P0010001  , t.P0010001" +
       " FROM c2000  f INNER JOIN c2010 s ON f.STUSAB =s.STUSAB INNER JOIN c2020 t ON s.STUSAB=t.STUSAB Order By f.STUSAB  ").toDF("STUSAB", "Pop2000", "Pop2010", "Pop2020")
 
-    //deletes files if already exists
+    // Delete files if already exists
 //    deleteFile(s"./tableFiles/resultCsv/decayProjectionStates/decayProjectionStates.csv")
 //    deleteFile(s"./tableFiles/resultCsv/hybridProjectionStates/hybridProjectionStates.csv")
 //    deleteFile(s"./tableFiles/resultCsv/slopeProjection/slopeProjection.csv")
@@ -413,7 +405,7 @@ object Main {
 //    deleteFile(s"./tableFiles/resultCsv/decayHybridProjectionUS/decayHybridProjectionUS.csv")
 //    deleteFile(s"./tableFiles/resultCsv/slopeProjectionUS/slopeProjectionUS.csv")
 
-//    //adds the needed headers to projection files
+//    // Add required headers to projection files
     AddHeader(s"./resultCsv/decayProjectionStates/decayProjectionStates.csv")
     AddHeader(s"./resultCsv/hybridProjectionStates/hybridProjectionStates.csv")
     AddHeader(s"./resultCsv/slopeProjection/slopeProjection.csv")
@@ -421,32 +413,32 @@ object Main {
     AddHeader(s"./resultCsv/decayHybridProjectionUS/decayHybridProjectionUS.csv")
     AddHeader(s"./resultCsv/slopeProjectionUS/slopeProjectionUS.csv")
 
-    //gets populations as lists
+    // Get populations as lists
     val list2010=fullDf.select("Pop2010").collectAsList()
     val list2000=fullDf.select("Pop2000").collectAsList()
     val list2020=fullDf.select("Pop2020").collectAsList()
     val statecode=fullDf.select("STUSAB").collectAsList()
 
-    //creates population projections for each state
-    for(i <- 0 to list2020.length-1) {
+    // Create population projections for each state
+    for(i <- 0 until list2020.length) {
 
       val pop2000Formatted = list2000(i)(0).toString.substring(0, list2000(i)(0).toString.length()-2).toLong
       val pop2010Formatted = list2010(i)(0).toString.substring(0, list2010(i)(0).toString.length()-2).toLong
       val pop2020Formatted = list2020(i)(0).toString.substring(0, list2020(i)(0).toString.length()-2).toLong
 
-      //passing parameter to prediction function using loop, This example passing value of Column name "P0010001"
+      // Passing parameter to prediction function using loop. This example passing value of Column name "P0010001"
       decayProjection(statecode(i)(0).toString, pop2000Formatted, pop2010Formatted, pop2020Formatted, s"./resultCsv/decayProjectionStates/decayProjectionStates.csv")
       decayHybridProjection(statecode(i)(0).toString, pop2000Formatted, pop2010Formatted, pop2020Formatted, s"./resultCsv/hybridProjectionStates/hybridProjectionStates.csv")
       slopeProjection(statecode(i)(0).toString, pop2000Formatted, pop2010Formatted, pop2020Formatted, s"./resultCsv/slopeProjection/slopeProjection.csv")
     }
 
-    //creates population projection for the US
+    // Create population projection for the US
     val yearsDf = session.spark.read.option("header", "true").csv(s"./resultCsv/query1")
     val totalPopList = yearsDf.collectAsList()
 
-    val USpop2000Formatted = totalPopList(0)(0).toString().substring(0, totalPopList(0)(0).toString.length()-2).toLong
-    val USpop2010Formatted = totalPopList(0)(1).toString().substring(0, totalPopList(0)(1).toString.length()-2).toLong
-    val USpop2020Formatted = totalPopList(0)(2).toString().substring(0, totalPopList(0)(2).toString.length()-2).toLong
+    val USpop2000Formatted = totalPopList(0)(0).toString.substring(0, totalPopList(0)(0).toString.length()-2).toLong
+    val USpop2010Formatted = totalPopList(0)(1).toString.substring(0, totalPopList(0)(1).toString.length()-2).toLong
+    val USpop2020Formatted = totalPopList(0)(2).toString.substring(0, totalPopList(0)(2).toString.length()-2).toLong
 
     decayProjection("US", USpop2000Formatted, USpop2010Formatted, USpop2020Formatted, s"./resultCsv/decayProjectionUS/decayProjectionUS.csv")
     decayHybridProjection("US", USpop2000Formatted, USpop2010Formatted, USpop2020Formatted, s"./decayHybridProjectionUS/decayHybridProjectionUS.csv")
